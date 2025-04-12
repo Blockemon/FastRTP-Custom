@@ -3,7 +3,6 @@ package me.wesley1808.fastrtp.config;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import me.wesley1808.fastrtp.FastRTP;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
@@ -24,8 +23,7 @@ public class Config {
     public int radius = -1;
     public int minRadius = 0;
     public int safetyCheckRadius = 1;
-    private final List<Integer> defaultCooldown = List.of(30);
-    public Object cooldown = defaultCooldown;
+    public List<Integer> cooldowns = List.of(30);
 
     public ReferenceOpenHashSet<ResourceKey<Biome>> blackListedBiomes = new ReferenceOpenHashSet<>(Set.of(
             Biomes.THE_END,
@@ -41,20 +39,6 @@ public class Config {
     ));
 
     public Messages messages = new Messages();
-
-    public List<Integer> getCooldowns() {
-        if (cooldown instanceof Integer) {
-            return List.of((Integer) cooldown);
-        } else {
-            try {
-                return (List<Integer>) cooldown;
-            } catch (ClassCastException e) {
-                FastRTP.LOGGER.error("Invalid cooldown format in config! Using default cooldown.");
-            }
-        }
-
-        return defaultCooldown;
-    }
 
     public static Config instance() {
         return instance;
