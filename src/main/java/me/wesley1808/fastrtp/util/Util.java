@@ -53,7 +53,7 @@ public final class Util {
             return redirect;
         }
 
-        if (Config.instance().useCurrentWorld) {
+        if (Config.instance().useCurrentDimension) {
             return currentLevel;
         }
 

@@ -16,7 +16,7 @@ public class Config {
     protected static Config instance = new Config();
     public boolean requirePermission = false;
     public boolean rtpBackEnabled = true;
-    public boolean useCurrentWorld = false;
+    public boolean useCurrentDimension = false;
     public boolean useStrictTeleportCheck = false;
     public String defaultDimension = "minecraft:overworld";
     public Object2ObjectOpenHashMap<String, String> dimensionRedirects = new Object2ObjectOpenHashMap<>();
