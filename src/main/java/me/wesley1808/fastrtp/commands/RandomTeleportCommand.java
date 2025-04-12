@@ -37,30 +37,30 @@ public final class RandomTeleportCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(literal("rtp")
-                .requires(src -> !Config.instance().requirePermission || Permissions.check(src, Permission.COMMAND_RTP, 2))
-                .executes(ctx -> execute(ctx.getSource()))
+            .requires(src -> !Config.instance().requirePermission || Permissions.check(src, Permission.COMMAND_RTP, 2))
+            .executes(ctx -> execute(ctx.getSource()))
 
-                .then(literal("reload")
-                        .requires(Permissions.require(Permission.COMMAND_RELOAD, 2))
-                        .executes(ctx -> reloadConfig(ctx.getSource()))
-                )
+            .then(argument("world", dimension())
+                .executes(ctx -> execute(ctx.getSource(), getDimension(ctx, "world")))
 
                 .then(argument("player", player())
-                        .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
-                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
+                    .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
+                    .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
 
-                        .then(argument("world", dimension())
-                                .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world")))
+                    .then(argument("radius", integer(0))
+                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
 
-                                .then(argument("radius", integer(0))
-                                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
-
-                                        .then(argument("minRadius", integer(0))
-                                                .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
-                                        )
-                                )
+                        .then(argument("minRadius", integer(0))
+                            .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
                         )
+                    )
                 )
+            )
+
+            .then(literal("reload")
+                    .requires(Permissions.require(Permission.COMMAND_RELOAD, 2))
+                    .executes(ctx -> reloadConfig(ctx.getSource()))
+            )
         );
 
         if (Config.instance().rtpBackEnabled) {
@@ -73,6 +73,10 @@ public final class RandomTeleportCommand {
 
     private static int execute(CommandSourceStack source) throws CommandSyntaxException {
         return execute(source, source.getPlayerOrException());
+    }
+
+    private static int execute(CommandSourceStack source, ServerLevel level) throws CommandSyntaxException {
+        return execute(source, source.getPlayerOrException(), level);
     }
 
     private static int execute(CommandSourceStack source, ServerPlayer player) {
