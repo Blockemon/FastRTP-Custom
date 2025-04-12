@@ -13,7 +13,10 @@ import me.wesley1808.fastrtp.util.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
@@ -41,25 +44,34 @@ public final class RandomTeleportCommand {
             .executes(ctx -> execute(ctx.getSource()))
 
             .then(argument("world", dimension())
-                .executes(ctx -> execute(ctx.getSource(), getDimension(ctx, "world")))
+                .executes(ctx -> {
+                    ResourceLocation worldResource = ctx.getArgument("world", ResourceLocation.class);
+                    String worldPermission = Permission.COMMAND_RTP_WORLD + worldResource.toString().replace(":", ".");
+                    CommandSourceStack executor = ctx.getSource();
+                    if (!Permissions.check(executor, worldPermission, 2)) {
+                        executor.sendFailure(Component.literal("You do not have permission to teleport to this world!"));
+                        return 0;
+                    }
+                    return execute(executor, executor.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, worldResource)));
+                })
+            )
 
-                .then(argument("player", player())
-                    .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
-                    .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
+            .then(argument("player", player())
+                .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
+                .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
 
-                    .then(argument("radius", integer(0))
-                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
+                .then(argument("radius", integer(0))
+                    .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
 
-                        .then(argument("minRadius", integer(0))
-                            .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
-                        )
+                    .then(argument("minRadius", integer(0))
+                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
                     )
                 )
             )
 
             .then(literal("reload")
-                    .requires(Permissions.require(Permission.COMMAND_RELOAD, 2))
-                    .executes(ctx -> reloadConfig(ctx.getSource()))
+                .requires(Permissions.require(Permission.COMMAND_RELOAD, 2))
+                .executes(ctx -> reloadConfig(ctx.getSource()))
             )
         );
 
