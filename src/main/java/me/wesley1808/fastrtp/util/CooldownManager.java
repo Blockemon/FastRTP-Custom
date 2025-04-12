@@ -29,7 +29,7 @@ public final class CooldownManager {
     }
 
     public static void addCooldown(ServerPlayer player) {
-        if (!Permissions.check(player, Permission.BYPASS_COOLDOWN, 2)) return;
+        if (Permissions.check(player, Permission.BYPASS_COOLDOWN, 2)) return;
 
         List<Integer> cooldowns = Config.instance().cooldowns;
 
