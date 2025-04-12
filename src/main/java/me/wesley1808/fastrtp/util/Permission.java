@@ -2,6 +2,7 @@ package me.wesley1808.fastrtp.util;
 
 public final class Permission {
     private static final String BASE = "fast-rtp.";
+    public static final String COOLDOWN = BASE + "cooldown.";
     public static final String BYPASS_COOLDOWN = BASE + "bypass.cooldown";
     public static final String COMMAND_RELOAD = BASE + "command.reload";
     public static final String COMMAND_RTP = BASE + "command.root";

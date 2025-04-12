@@ -5,6 +5,8 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.wesley1808.fastrtp.config.Config;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 public final class CooldownManager {
@@ -27,7 +29,15 @@ public final class CooldownManager {
     }
 
     public static void addCooldown(ServerPlayer player) {
-        int cooldown = Config.instance().cooldown;
+        List<Integer> cooldowns = Config.instance().getCooldowns();
+        int cooldown = Collections.max(cooldowns);
+        for (int value : cooldowns) {
+            String permission = Permission.COOLDOWN + value;
+            if (Permissions.check(player, permission)) {
+                cooldown = Math.min(cooldown, value);
+            }
+        }
+
         if (cooldown != -1 && !Permissions.check(player, Permission.BYPASS_COOLDOWN, 2)) {
             COOLDOWNS.put(player.getUUID(), System.currentTimeMillis() + (cooldown * 1000L));
         }
