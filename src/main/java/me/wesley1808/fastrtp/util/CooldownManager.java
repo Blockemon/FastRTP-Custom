@@ -29,8 +29,16 @@ public final class CooldownManager {
     }
 
     public static void addCooldown(ServerPlayer player) {
+        if (!Permissions.check(player, Permission.BYPASS_COOLDOWN, 2)) return;
+
         List<Integer> cooldowns = Config.instance().getCooldowns();
+
+        if (cooldowns.size() == 1 && cooldowns.getFirst() <= 0) return;
+
         int cooldown = Collections.max(cooldowns);
+
+        if (cooldown <= 0) return;
+
         for (int value : cooldowns) {
             String permission = Permission.COOLDOWN + value;
             if (Permissions.check(player, permission)) {
@@ -38,9 +46,7 @@ public final class CooldownManager {
             }
         }
 
-        if (cooldown != -1 && !Permissions.check(player, Permission.BYPASS_COOLDOWN, 2)) {
-            COOLDOWNS.put(player.getUUID(), System.currentTimeMillis() + (cooldown * 1000L));
-        }
+        COOLDOWNS.put(player.getUUID(), System.currentTimeMillis() + (cooldown * 1000L));
     }
 
     public static void removeCooldown(UUID uuid) {
