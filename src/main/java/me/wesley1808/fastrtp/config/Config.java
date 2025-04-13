@@ -19,6 +19,7 @@ public class Config {
     public boolean useCurrentDimension = false;
     public boolean useStrictTeleportCheck = false;
     public String defaultDimension = "minecraft:overworld";
+    public List<String> worldNamespaces = List.of("minecraft");
     public Object2ObjectOpenHashMap<String, String> dimensionRedirects = new Object2ObjectOpenHashMap<>();
     public int radius = -1;
     public int minRadius = 0;

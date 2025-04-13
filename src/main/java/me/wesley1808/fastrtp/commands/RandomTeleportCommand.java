@@ -2,6 +2,7 @@ package me.wesley1808.fastrtp.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -13,23 +14,23 @@ import me.wesley1808.fastrtp.util.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
-import static net.minecraft.commands.arguments.DimensionArgument.dimension;
 import static net.minecraft.commands.arguments.DimensionArgument.getDimension;
 import static net.minecraft.commands.arguments.EntityArgument.getPlayer;
 import static net.minecraft.commands.arguments.EntityArgument.player;
@@ -43,28 +44,30 @@ public final class RandomTeleportCommand {
             .requires(src -> !Config.instance().requirePermission || Permissions.check(src, Permission.COMMAND_RTP, 2))
             .executes(ctx -> execute(ctx.getSource()))
 
-            .then(argument("world", dimension())
+            .then(argument("world", StringArgumentType.word())
+                .suggests(new WorldSuggestionProvider())
                 .executes(ctx -> {
-                    ResourceLocation worldResource = ctx.getArgument("world", ResourceLocation.class);
-                    String worldPermission = Permission.COMMAND_RTP_WORLD + worldResource.toString().replace(":", ".");
-                    CommandSourceStack executor = ctx.getSource();
-                    if (!Permissions.check(executor, worldPermission, 2)) {
-                        executor.sendFailure(Component.literal("You do not have permission to teleport to this world!"));
+                    String worldName = ctx.getArgument("world", String.class);
+                    ServerLevel level = resolveWorld(ctx.getSource(), worldName);
+
+                    if (level == null) {
+                        ctx.getSource().sendFailure(Component.literal("Unknown or invalid world: " + worldName));
                         return 0;
                     }
-                    return execute(executor, executor.getServer().getLevel(ResourceKey.create(Registries.DIMENSION, worldResource)));
+
+                    return execute(ctx.getSource(), level);
                 })
-            )
 
-            .then(argument("player", player())
-                .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
-                .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
+                .then(argument("player", player())
+                    .requires(Permissions.require(Permission.COMMAND_RTP_ADVANCED, 2))
+                    .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player")))
 
-                .then(argument("radius", integer(0))
-                    .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
+                    .then(argument("radius", integer(0))
+                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius")))
 
-                    .then(argument("minRadius", integer(0))
-                        .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
+                        .then(argument("minRadius", integer(0))
+                            .executes(ctx -> execute(ctx.getSource(), getPlayer(ctx, "player"), getDimension(ctx, "world"), getInteger(ctx, "radius"), getInteger(ctx, "minRadius")))
+                        )
                     )
                 )
             )
@@ -77,10 +80,24 @@ public final class RandomTeleportCommand {
 
         if (Config.instance().rtpBackEnabled) {
             dispatcher.register(literal("rtpback")
-                    .requires(Permissions.require(Permission.COMMAND_RTP_BACK, true))
-                    .executes(ctx -> executeBack(ctx.getSource().getPlayerOrException()))
+                .requires(Permissions.require(Permission.COMMAND_RTP_BACK, true))
+                .executes(ctx -> executeBack(ctx.getSource().getPlayerOrException()))
             );
         }
+    }
+
+    @Nullable
+    private static ServerLevel resolveWorld(CommandSourceStack source, String worldName) {
+        var server = source.getServer();
+
+        Optional<ResourceKey<Level>> levelMatch = server.levelKeys().stream()
+            .filter(levelKey -> Config.instance().worldNamespaces.contains(levelKey.location().getNamespace())) // Only worlds with namespaces in config
+            .filter(levelKey -> levelKey.location().getPath().equalsIgnoreCase(worldName)) // Only worlds with names that match the argument
+            .filter(levelKey -> Permissions.check(
+                source, Permission.COMMAND_RTP_WORLD + levelKey.location().toString().replace(":", "."), 2) // Only worlds the player has permission for
+            ).findFirst();
+
+        return levelMatch.map(server::getLevel).orElse(null);
     }
 
     private static int execute(CommandSourceStack source) throws CommandSyntaxException {
