@@ -3,23 +3,25 @@ package me.wesley1808.fastrtp.util;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import kotlin.Unit;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import me.wesley1808.fastrtp.FastRTP;
 import me.wesley1808.fastrtp.config.Config;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.silkmc.silk.igui.Gui;
-import net.silkmc.silk.igui.GuiBuilder;
+import net.silkmc.silk.igui.GuiBuilderKt;
+import net.silkmc.silk.igui.GuiIcon;
 import net.silkmc.silk.igui.GuiSlot;
-import net.silkmc.silk.igui.GuiSlotCompound;
 import net.silkmc.silk.igui.GuiType;
-import net.silkmc.silk.igui.observable.GuiList;
+import org.apache.commons.lang3.text.WordUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class RtpGui {
 
@@ -27,75 +29,83 @@ public class RtpGui {
     public Gui buildGui(ServerPlayer player) {
         if (player.getServer() == null) return null;
 
-        List<String> dimensions = player.getServer().levelKeys().stream().map(key -> key.location().getPath()).toList();
-        int numDimensions = dimensions.size();
-        if (numDimensions == 0) return null;
+        List<String> dimensions = player.getServer().levelKeys().stream().map(key -> key.location().toString())
+            .filter(world -> Permissions.check(player, Permission.COMMAND_RTP_WORLD + world.replace(":", "."), 2))
+            .limit(54).toList();
+
+        if (dimensions.isEmpty()) return null;
 
         Config config = Config.instance();
-        Object2ObjectLinkedOpenHashMap<String, String> dimensionToTexture = config.worldHeadTextures;
-        List<String> otherDimensions = new ArrayList<>(dimensions);
-        otherDimensions.removeAll(dimensionToTexture.keySet());
+        List<String> unspecifiedDimensions = new ArrayList<>(dimensions);
+        unspecifiedDimensions.removeAll(config.worldHeadTextures.keySet());
 
-        Object2ObjectLinkedOpenHashMap<String, String> iconList = getGuiIcons(
-            Util.getItemDistribution(numDimensions),
-            dimensionToTexture,
-            otherDimensions,
+        ObjectArrayList<ObjectObjectImmutablePair<String, String>> dimensionIconList = generateDimensionIcons(
+            Util.getItemDistribution(dimensions.size()),
+            new Object2ObjectLinkedOpenHashMap<>(config.worldHeadTextures),
+            unspecifiedDimensions,
             config.defaultWorldHeadTexture
         );
 
-        GuiBuilder gui = getGuiBuilder(player, iconList);
-        return gui.build();
-    }
+        int numRows = Math.min(dimensionIconList.size() / 9, 6);
+        GuiType guiType = GuiType.getEntries().get(numRows - 1);
 
-    private static GuiBuilder getGuiBuilder(ServerPlayer player, Object2ObjectLinkedOpenHashMap<String, String> iconList) {
-        GuiBuilder gui = new GuiBuilder(GuiType.NINE_BY_ONE, Component.literal("Worlds"), 0);
-        gui.page(0, 0, builder -> {
-            builder.compound(
-                new GuiSlotCompound.SlotRange.Rectangle(new GuiSlot(1, 1), new GuiSlot(1, 9)),
-                new GuiList<>(iconList.keySet().stream().toList()),
-                (dimension, _unused) -> (dimension == null) ? ItemStack.EMPTY : Util.createCustomHead(iconList.get(dimension)),
-                (clickEvent, dimension, _unused) -> {
-                    try {
-                        Objects.requireNonNull(player.getServer()).getCommands().getDispatcher().execute("rtp " + dimension, player.createCommandSourceStack());
-                    } catch (CommandSyntaxException e) {
-                        FastRTP.LOGGER.warn("RTP command via GUI failed: {}", e.getMessage());
+        return GuiBuilderKt.igui(guiType, Component.literal("Available Worlds"), 0, guiBuilder -> {
+            guiBuilder.page(0, 0, builder -> {
+                int slotCounter = 1;
+                for (ObjectObjectImmutablePair<String, String> dimensionIconPair : dimensionIconList) {
+                    String dimension = dimensionIconPair.left();
+                    GuiSlot slot = new GuiSlot(1, slotCounter++);
+                    if (dimension == null) {
+                        builder.placeholder(slot, new GuiIcon.StaticIcon(ItemStack.EMPTY));
+                    } else {
+                        String texture = dimensionIconPair.right();
+                        String worldName = dimension.split(":")[1];
+                        String name = WordUtils.capitalize(worldName.replace("_", " "));
+                        builder.button(slot, new GuiIcon.StaticIcon(Util.createCustomHead(texture, name)), (clickEvent, _unused) -> {
+                            try {
+                                player.getServer().getCommands().getDispatcher().execute("rtp " + worldName, player.createCommandSourceStack());
+                                clickEvent.getGui().closeForViewers();
+                            } catch (CommandSyntaxException e) {
+                                FastRTP.LOGGER.warn("RTP command via GUI failed: {}", e.getMessage());
+                            }
+                            return Unit.INSTANCE;
+                        });
                     }
-                    return Unit.INSTANCE;
                 }
-            );
-
+                return Unit.INSTANCE;
+            });
             return Unit.INSTANCE;
         });
-        return gui;
     }
 
-    private Object2ObjectLinkedOpenHashMap<String, String> getGuiIcons(
+    private ObjectArrayList<ObjectObjectImmutablePair<String, String>> generateDimensionIcons(
         BooleanList distribution,
-        Object2ObjectLinkedOpenHashMap<String, String> dimensionToTexture,
-        List<String> otherDimensions,
+        Object2ObjectLinkedOpenHashMap<String, String> configuredDimensionTextures,
+        List<String> unspecifiedDimensions,
         String defaultTexture
     ) {
-        Object2ObjectLinkedOpenHashMap<String, String> slotMappings = new Object2ObjectLinkedOpenHashMap<>();
+        ObjectArrayList<ObjectObjectImmutablePair<String, String>> slotIcons = new ObjectArrayList<>();
 
         for (Boolean slotFlag : distribution) {
+            ObjectObjectImmutablePair<String, String> iconPair;
             if (!slotFlag) {
-                // Slot is empty.
-                slotMappings.put(null, null);
+                iconPair = ObjectObjectImmutablePair.of(null, null);
             } else {
-                if (!dimensionToTexture.isEmpty()) {
+                if (!configuredDimensionTextures.isEmpty()) {
                     // Get and remove the first mapping from the config-defined map.
-                    String dimension = dimensionToTexture.keySet().getFirst();
-                    slotMappings.put(dimension, dimensionToTexture.remove(dimension));
-                } else if (!otherDimensions.isEmpty()) {
+                    String dimension = configuredDimensionTextures.keySet().getFirst();
+                    iconPair = ObjectObjectImmutablePair.of(dimension, configuredDimensionTextures.remove(dimension));
+                } else if (!unspecifiedDimensions.isEmpty()) {
                     // Non-configured world, use the configured default texture.
-                    slotMappings.put(otherDimensions.removeFirst(), defaultTexture);
+                    iconPair = ObjectObjectImmutablePair.of(unspecifiedDimensions.removeFirst(), defaultTexture);
                 } else {
                     // No dimensions left to map. Really shouldn't end up here so, to avoid masking a problem, use a default value instead of null.
-                    slotMappings.put("unknown", defaultTexture);
+                    iconPair = ObjectObjectImmutablePair.of("unknown", defaultTexture);
                 }
             }
+            slotIcons.add(iconPair);
         }
 
-        return slotMappings;
+        return slotIcons;
     }
 }
