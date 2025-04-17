@@ -28,6 +28,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -148,7 +149,7 @@ public final class Util {
     }
 
     // Creates a Player Head ItemStack with the texture from the given textureUrl
-    public static ItemStack createCustomHead(String textureUrl) {
+    public static ItemStack createCustomHead(String textureUrl, String name) {
         ItemStack head = new ItemStack(Items.PLAYER_HEAD);
 
         GameProfile profile = new GameProfile(UUID.randomUUID(), "");
@@ -159,6 +160,8 @@ public final class Util {
         propertyMap.put("textures", new Property("textures", base64Texture));
 
         head.set(DataComponents.PROFILE, new ResolvableProfile(profile));
+        head.set(DataComponents.ITEM_NAME, Component.literal(name));
+        head.set(DataComponents.LORE, new ItemLore(List.of(Component.literal("Click to teleport"), Component.literal("somewhere random"))));
 
         return head;
     }
