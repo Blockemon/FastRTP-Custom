@@ -1,5 +1,6 @@
 package me.wesley1808.fastrtp.config;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -10,6 +11,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Config {
@@ -25,6 +27,12 @@ public class Config {
     public int minRadius = 0;
     public int safetyCheckRadius = 1;
     public List<Integer> cooldowns = List.of(30);
+    public String defaultWorldHeadTexture = "http://textures.minecraft.net/texture/17980b940af858f910943464ee00359287cb0b5810680b60b89be4210dda0ed1";
+    public Object2ObjectLinkedOpenHashMap<String, String> worldHeadTextures = new Object2ObjectLinkedOpenHashMap<>(Map.of(
+        defaultDimension, defaultWorldHeadTexture,
+        "minecraft:the_nether", "http://textures.minecraft.net/texture/6c7b800dd43f30bdc7b06f6b5516d30e6d97c039ca995d7d963de5b4977b6723",
+        "minecraft:the_end", "http://textures.minecraft.net/texture/f4684e3e7890caf7d13762ea19eb14c5940b88fd7f077d81e6effb4f6df16c26"
+    ));
 
     public ReferenceOpenHashSet<ResourceKey<Biome>> blackListedBiomes = new ReferenceOpenHashSet<>(Set.of(
             Biomes.THE_END,
