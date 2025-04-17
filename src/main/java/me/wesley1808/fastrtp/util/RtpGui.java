@@ -30,6 +30,7 @@ public class RtpGui {
         if (player.getServer() == null) return null;
 
         List<String> dimensions = player.getServer().levelKeys().stream().map(key -> key.location().toString())
+            .filter(world -> !Config.instance().blackListedGuiDimensions.contains(world))
             .filter(world -> Permissions.check(player, Permission.COMMAND_RTP_WORLD + world.replace(":", "."), 2))
             .limit(54).toList();
 
