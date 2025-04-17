@@ -2,6 +2,7 @@ package me.wesley1808.fastrtp.config;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.resources.ResourceKey;
@@ -33,6 +34,11 @@ public class Config {
         defaultDimension, defaultWorldHeadTexture,
         "minecraft:the_nether", "http://textures.minecraft.net/texture/6c7b800dd43f30bdc7b06f6b5516d30e6d97c039ca995d7d963de5b4977b6723",
         "minecraft:the_end", "http://textures.minecraft.net/texture/f4684e3e7890caf7d13762ea19eb14c5940b88fd7f077d81e6effb4f6df16c26"
+    ));
+
+    public ObjectOpenHashSet<String> blackListedGuiDimensions = new ObjectOpenHashSet<>(Set.of(
+        "minecraft:the_nether",
+        "minecraft:the_end"
     ));
 
     public ReferenceOpenHashSet<ResourceKey<Biome>> blackListedBiomes = new ReferenceOpenHashSet<>(Set.of(
