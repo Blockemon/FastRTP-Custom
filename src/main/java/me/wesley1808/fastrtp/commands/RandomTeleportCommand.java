@@ -22,6 +22,8 @@ import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.silkmc.silk.igui.Gui;
+import net.silkmc.silk.igui.GuiKt;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -42,7 +44,18 @@ public final class RandomTeleportCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(literal("rtp")
             .requires(src -> !Config.instance().requirePermission || Permissions.check(src, Permission.COMMAND_RTP, 2))
-            .executes(ctx -> execute(ctx.getSource()))
+            .executes(ctx -> {
+                if (Config.instance().useRtpGui) {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    Gui gui = new RtpGui().buildGui(player);
+                    if (gui == null) return 0;
+
+                    GuiKt.openGui(player, gui, 0);
+                    return Command.SINGLE_SUCCESS;
+                } else {
+                    return execute(ctx.getSource());
+                }
+            })
 
             .then(argument("world", StringArgumentType.word())
                 .suggests(new WorldSuggestionProvider())
