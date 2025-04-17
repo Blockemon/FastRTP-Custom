@@ -28,6 +28,9 @@ dependencies {
 
     // Silk IGUI
     modImplementation("net.silkmc:silk-igui:1.10.7")
+
+    // Coroutine compatibility
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2")
 }
 
 processResources {
