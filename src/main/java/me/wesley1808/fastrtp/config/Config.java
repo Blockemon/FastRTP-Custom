@@ -27,6 +27,7 @@ public class Config {
     public int minRadius = 0;
     public int safetyCheckRadius = 1;
     public List<Integer> cooldowns = List.of(30);
+    public boolean useRtpGui = true;
     public String defaultWorldHeadTexture = "http://textures.minecraft.net/texture/17980b940af858f910943464ee00359287cb0b5810680b60b89be4210dda0ed1";
     public Object2ObjectLinkedOpenHashMap<String, String> worldHeadTextures = new Object2ObjectLinkedOpenHashMap<>(Map.of(
         defaultDimension, defaultWorldHeadTexture,
