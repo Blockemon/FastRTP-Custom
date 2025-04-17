@@ -22,16 +22,16 @@ public class Config {
     public boolean useCurrentDimension = false;
     public boolean useStrictTeleportCheck = false;
     public String defaultDimension = "minecraft:overworld";
-    public List<String> worldNamespaces = List.of("minecraft");
+    public List<String> dimensionNameSpaces = List.of("minecraft");
     public Object2ObjectOpenHashMap<String, String> dimensionRedirects = new Object2ObjectOpenHashMap<>();
     public int radius = -1;
     public int minRadius = 0;
     public int safetyCheckRadius = 1;
     public List<Integer> cooldowns = List.of(30);
     public boolean useRtpGui = true;
-    public String defaultWorldHeadTexture = "http://textures.minecraft.net/texture/17980b940af858f910943464ee00359287cb0b5810680b60b89be4210dda0ed1";
-    public Object2ObjectLinkedOpenHashMap<String, String> worldHeadTextures = new Object2ObjectLinkedOpenHashMap<>(Map.of(
-        defaultDimension, defaultWorldHeadTexture,
+    public String defaultDimensionHeadTexture = "http://textures.minecraft.net/texture/17980b940af858f910943464ee00359287cb0b5810680b60b89be4210dda0ed1";
+    public Object2ObjectLinkedOpenHashMap<String, String> dimensionHeadTextures = new Object2ObjectLinkedOpenHashMap<>(Map.of(
+        defaultDimension, defaultDimensionHeadTexture,
         "minecraft:the_nether", "http://textures.minecraft.net/texture/6c7b800dd43f30bdc7b06f6b5516d30e6d97c039ca995d7d963de5b4977b6723",
         "minecraft:the_end", "http://textures.minecraft.net/texture/f4684e3e7890caf7d13762ea19eb14c5940b88fd7f077d81e6effb4f6df16c26"
     ));

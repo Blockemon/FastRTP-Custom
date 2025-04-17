@@ -8,5 +8,5 @@ public final class Permission {
     public static final String COMMAND_RTP = BASE + "command.root";
     public static final String COMMAND_RTP_BACK = BASE + "command.back";
     public static final String COMMAND_RTP_ADVANCED = BASE + "command.advanced";
-    public static final String COMMAND_RTP_WORLD = BASE + "command.world.";
+    public static final String COMMAND_RTP_DIMENSION = BASE + "command.world.";
 }

@@ -60,11 +60,11 @@ public final class RandomTeleportCommand {
             .then(argument("world", StringArgumentType.word())
                 .suggests(new WorldSuggestionProvider())
                 .executes(ctx -> {
-                    String worldName = ctx.getArgument("world", String.class);
-                    ServerLevel level = resolveWorld(ctx.getSource(), worldName);
+                    String dimensionName = ctx.getArgument("world", String.class);
+                    ServerLevel level = resolveDimension(ctx.getSource(), dimensionName);
 
                     if (level == null) {
-                        ctx.getSource().sendFailure(Component.literal("Unknown or invalid world: " + worldName));
+                        ctx.getSource().sendFailure(Component.literal("Unknown or invalid world: " + dimensionName));
                         return 0;
                     }
 
@@ -100,14 +100,14 @@ public final class RandomTeleportCommand {
     }
 
     @Nullable
-    private static ServerLevel resolveWorld(CommandSourceStack source, String worldName) {
+    private static ServerLevel resolveDimension(CommandSourceStack source, String dimensionName) {
         var server = source.getServer();
 
         Optional<ResourceKey<Level>> levelMatch = server.levelKeys().stream()
-            .filter(levelKey -> Config.instance().worldNamespaces.contains(levelKey.location().getNamespace())) // Only worlds with namespaces in config
-            .filter(levelKey -> levelKey.location().getPath().equalsIgnoreCase(worldName)) // Only worlds with names that match the argument
+            .filter(levelKey -> Config.instance().dimensionNameSpaces.contains(levelKey.location().getNamespace())) // Only dimensions with namespaces in config
+            .filter(levelKey -> levelKey.location().getPath().equalsIgnoreCase(dimensionName)) // Only dimensions with names that match the argument
             .filter(levelKey -> Permissions.check(
-                source, Permission.COMMAND_RTP_WORLD + levelKey.location().toString().replace(":", "."), 2) // Only worlds the player has permission for
+                source, Permission.COMMAND_RTP_DIMENSION + levelKey.location().toString().replace(":", "."), 2) // Only dimensions the player has permission for
             ).findFirst();
 
         return levelMatch.map(server::getLevel).orElse(null);

@@ -30,21 +30,21 @@ public class RtpGui {
         if (player.getServer() == null) return null;
 
         List<String> dimensions = player.getServer().levelKeys().stream().map(key -> key.location().toString())
-            .filter(world -> !Config.instance().blackListedGuiDimensions.contains(world))
-            .filter(world -> Permissions.check(player, Permission.COMMAND_RTP_WORLD + world.replace(":", "."), 2))
+            .filter(dimension -> !Config.instance().blackListedGuiDimensions.contains(dimension))
+            .filter(dimension -> Permissions.check(player, Permission.COMMAND_RTP_DIMENSION + dimension.replace(":", "."), 2))
             .limit(54).toList();
 
         if (dimensions.isEmpty()) return null;
 
         Config config = Config.instance();
         List<String> unspecifiedDimensions = new ArrayList<>(dimensions);
-        unspecifiedDimensions.removeAll(config.worldHeadTextures.keySet());
+        unspecifiedDimensions.removeAll(config.dimensionHeadTextures.keySet());
 
         ObjectArrayList<ObjectObjectImmutablePair<String, String>> dimensionIconList = generateDimensionIcons(
             Util.getItemDistribution(dimensions.size()),
-            new Object2ObjectLinkedOpenHashMap<>(config.worldHeadTextures),
+            new Object2ObjectLinkedOpenHashMap<>(config.dimensionHeadTextures),
             unspecifiedDimensions,
-            config.defaultWorldHeadTexture
+            config.defaultDimensionHeadTexture
         );
 
         int numRows = Math.min(dimensionIconList.size() / 9, 6);
@@ -60,11 +60,11 @@ public class RtpGui {
                         builder.placeholder(slot, new GuiIcon.StaticIcon(ItemStack.EMPTY));
                     } else {
                         String texture = dimensionIconPair.right();
-                        String worldName = dimension.split(":")[1];
-                        String name = WordUtils.capitalize(worldName.replace("_", " "));
+                        String dimensionName = dimension.split(":")[1];
+                        String name = WordUtils.capitalize(dimensionName.replace("_", " "));
                         builder.button(slot, new GuiIcon.StaticIcon(Util.createCustomHead(texture, name)), (clickEvent, _unused) -> {
                             try {
-                                player.getServer().getCommands().getDispatcher().execute("rtp " + worldName, player.createCommandSourceStack());
+                                player.getServer().getCommands().getDispatcher().execute("rtp " + dimensionName, player.createCommandSourceStack());
                                 clickEvent.getGui().closeForViewers();
                             } catch (CommandSyntaxException e) {
                                 FastRTP.LOGGER.warn("RTP command via GUI failed: {}", e.getMessage());
@@ -97,7 +97,7 @@ public class RtpGui {
                     String dimension = configuredDimensionTextures.keySet().getFirst();
                     iconPair = ObjectObjectImmutablePair.of(dimension, configuredDimensionTextures.remove(dimension));
                 } else if (!unspecifiedDimensions.isEmpty()) {
-                    // Non-configured world, use the configured default texture.
+                    // Non-configured dimension, use the configured default texture.
                     iconPair = ObjectObjectImmutablePair.of(unspecifiedDimensions.removeFirst(), defaultTexture);
                 } else {
                     // No dimensions left to map. Really shouldn't end up here so, to avoid masking a problem, use a default value instead of null.

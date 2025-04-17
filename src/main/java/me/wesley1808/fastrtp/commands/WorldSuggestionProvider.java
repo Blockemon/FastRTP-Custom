@@ -22,8 +22,8 @@ public class WorldSuggestionProvider implements SuggestionProvider<CommandSource
         var suggestions = server.levelKeys().stream()
             .filter(levelKey -> {
                 ResourceLocation worldResource = levelKey.location();
-                String permission = Permission.COMMAND_RTP_WORLD + worldResource.toString().replace(":", ".");
-                return Config.instance().worldNamespaces.contains(worldResource.getNamespace()) &&
+                String permission = Permission.COMMAND_RTP_DIMENSION + worldResource.toString().replace(":", ".");
+                return Config.instance().dimensionNameSpaces.contains(worldResource.getNamespace()) &&
                     Permissions.check(source, permission);
             })
             .map(levelKey -> levelKey.location().getPath()) // Suggest world names without namespaces
