@@ -1,8 +1,14 @@
 package me.wesley1808.fastrtp.util;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import eu.pb4.placeholders.api.TextParserUtils;
+import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
+import it.unimi.dsi.fastutil.booleans.BooleanList;
 import me.wesley1808.fastrtp.config.Config;
 import me.wesley1808.fastrtp.mixins.ServerChunkCacheAccessor;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -20,12 +26,21 @@ import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.entity.EntityTypeTest;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public final class Util {
 
@@ -130,5 +145,55 @@ public final class Util {
         }
 
         return isTargeted;
+    }
+
+    // Creates a Player Head ItemStack with the texture from the given textureUrl
+    public static ItemStack createCustomHead(String textureUrl) {
+        ItemStack head = new ItemStack(Items.PLAYER_HEAD);
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), "");
+        PropertyMap propertyMap = profile.getProperties();
+        String base64Texture = Base64.getEncoder().encodeToString(
+            ("{\"textures\":{\"SKIN\":{\"url\":\"" + textureUrl + "\"}}}").getBytes()
+        );
+        propertyMap.put("textures", new Property("textures", base64Texture));
+
+        head.set(DataComponents.PROFILE, new ResolvableProfile(profile));
+
+        return head;
+    }
+
+    public static BooleanList getItemDistribution(int nItems) {
+        int nRows = (int) Math.ceil((double) nItems / 9); // Calculate rows needed
+        int[] itemsPerRow = new int[nRows];
+
+        // Calculate how many items should be in each row
+        Arrays.fill(itemsPerRow, nItems / nRows);
+        int remainder = nItems % nRows;
+        for (int i = 0; i < remainder; i++) {
+            itemsPerRow[i]++;
+        }
+
+        // Build a list of all row distributions
+        BooleanList distribution = new BooleanArrayList();
+        for (int itemsInRow : itemsPerRow) {
+            distribution.addAll(getRowBooleans(itemsInRow));
+        }
+
+        return distribution;
+    }
+
+    private static @NotNull BooleanList getRowBooleans(int itemsInRow) {
+        BooleanList row = new BooleanArrayList(new ArrayList<>(Collections.nCopies(9, false))); // 9 slots per row in an inventory GUI
+
+        if (itemsInRow > 0) {
+            double interval = (double) 9 / itemsInRow;
+            for (int i = 0; i < itemsInRow; i++) {
+                int index = (int) Math.round(i * interval + interval / 2 - 0.5); // Centered placement
+                row.set(index, true);
+            }
+        }
+
+        return row;
     }
 }
