@@ -25,6 +25,9 @@ dependencies {
 
     // Placeholder API
     modImplementation(include("eu.pb4:placeholder-api:${project.placeholder_api_version}"))
+
+    // Silk IGUI
+    modImplementation("net.silkmc:silk-igui:1.10.7")
 }
 
 processResources {
