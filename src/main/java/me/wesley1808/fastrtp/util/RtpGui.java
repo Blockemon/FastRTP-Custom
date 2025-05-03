@@ -36,14 +36,23 @@ public class RtpGui {
 
         if (dimensions.isEmpty()) return null;
 
+        Object2ObjectLinkedOpenHashMap<String, String> dimensionTextures = new Object2ObjectLinkedOpenHashMap<>();
+        List<String> unknownDimensions = new ArrayList<>();
         Config config = Config.instance();
-        List<String> unspecifiedDimensions = new ArrayList<>(dimensions);
-        unspecifiedDimensions.removeAll(config.dimensionHeadTextures.keySet());
+
+        for (String dim : dimensions) {
+            String value = config.dimensionHeadTextures.get(dim);
+            if (value != null) {
+                dimensionTextures.put(dim, value);
+            } else {
+                unknownDimensions.add(dim);
+            }
+        }
 
         ObjectArrayList<ObjectObjectImmutablePair<String, String>> dimensionIconList = generateDimensionIcons(
             Util.getItemDistribution(dimensions.size()),
-            new Object2ObjectLinkedOpenHashMap<>(config.dimensionHeadTextures),
-            unspecifiedDimensions,
+            dimensionTextures,
+            unknownDimensions,
             config.defaultDimensionHeadTexture
         );
 
